@@ -43,7 +43,7 @@ puppeteer.use(stealthPlugin());
 
 // main();
 
-// async function getExchangeRate(currency, country, transactionType = "Buy") {
+// async function getExchangeRate(currencyName, countryName, transactionType) {
 //   const browser = await puppeteer.launch({ headless: false });
 //   const page = await browser.newPage();
 
@@ -57,95 +57,65 @@ puppeteer.use(stealthPlugin());
 
 //     // 2. Select transaction type
 //     const typeValue = transactionType === "Buy" ? "B" : "S";
-//     await page.waitForSelector(`input.transfer_type[value="${typeValue}"]`, {
-//       visible: true,
-//     });
 //     await page.click(`input.transfer_type[value="${typeValue}"]`);
 
-//     // 3. Open currency dropdown
-//     const dropdownOpener = ".send-currency-flag-selected";
-//     await page.waitForSelector(dropdownOpener, {
-//       visible: true,
-//       timeout: 30000,
-//     });
-//     await page.click(dropdownOpener);
-
-//     // 4. Wait for dropdown and select currency
-//     await page.waitForSelector(".currency-select.send-currency", {
-//       visible: true,
-//     });
-
-//     // Use proper selector for the list item
-//     const currencySelector = `li a span[data-cntcode="${currency}"]`;
-//     await page.waitForSelector(currencySelector, { visible: true });
-
-//     // Click the parent anchor element properly
-//     await page.evaluate((selector) => {
-//       const span = document.querySelector(selector);
-//       span.closest("a").click(); // Click the parent anchor
-//     }, currencySelector);
-
-//     // 5. Verify selection
-//     await page.waitForFunction(
-//       (currency) => {
-//         const selected = document.querySelector(
-//           ".send-currency-flag-selected b"
-//         );
-//         return selected?.textContent.includes(currency);
-//       },
-//       { timeout: 15000 },
-//       currency
+//     // 3. Store initial rate for comparison
+//     const initialRate = await page.$eval("#rate-note", (el) =>
+//       el.textContent.trim()
 //     );
 
-//     // Scroll and click
-//     await page.evaluate((selector) => {
-//       document.querySelector(selector).scrollIntoView({ behavior: "smooth" });
-//     }, currencySelector);
+//     // 4. Open currency dropdown
+//     await page.click(".send-currency-flag-selected");
 
-//     // Click both the span and its parent to ensure selection
-//     await page.click(currencySelector);
-//     await page.click(`${currencySelector} >> xpath=..`); // Click parent anchor
-
-//     // 6. Verify selection updated
-//     await page.waitForFunction(
-//       (currency) => {
-//         const selected = document.querySelector(
-//           ".send-currency-flag-selected b"
-//         );
-//         return selected?.textContent.includes(currency);
-//       },
-//       { timeout: 15000 },
-//       currency
-//     );
-
-//     // 7. Handle amount input
-//     await page.waitForSelector(".currency-send.form-control", {
+//     // 5. Select currency using country code
+//     const countrySelector = `li a span[data-ccyname="${currencyName}"]`;
+//     await page.waitForSelector(countrySelector, {
 //       visible: true,
+//       timeout: 15000,
 //     });
-//     await page.evaluate(() => {
-//       const input = document.querySelector(".currency-send.form-control");
-//       input.value = "";
-//     });
-//     await page.type(".currency-send.form-control", "1", { delay: 100 });
 
-//     // 8. Wait for conversion
-//     await page.waitForFunction(
-//       () => {
-//         const el = document.querySelector(".currency-receive.form-control");
-//         return el && el.value !== "" && !isNaN(el.value);
+//     // Click and get the expected currency code
+//     // page.evaluate here instead of separate page.click + page.$eval ************/
+//     const { currencyCode: expectedCurrency, rate } = await page.evaluate(
+//       (selector) => {
+//         const span = document.querySelector(selector);
+//         const currency = span.dataset.ccyname;
+//         span.closest("a").click();
+//         return {
+//           currencyCode: currency,
+//           rate: document.querySelector("#rate-note").textContent.trim(),
+//         };
 //       },
-//       { timeout: 20000 }
+//       countrySelector
 //     );
 
-//     // 9. Get exchange rate
-//     const exchangeRate = await page.$eval(
-//       ".currency-receive.form-control",
-//       (el) => parseFloat(el.value)
+//     // 6. Wait for rate update using multiple conditions
+//     await page.waitForFunction(
+//       ({ initial, expected }) => {
+//         const currentRate = document
+//           .querySelector("#rate-note")
+//           .textContent.trim();
+//         const currentCurrency = document
+//           .querySelector("#rate-note-currency")
+//           .textContent.trim();
+//         return currentRate !== initial && currentCurrency === expected;
+//       },
+//       { timeout: 10000 },
+//       { initial: initialRate, expected: expectedCurrency }
+//     );
+
+//     // 7. Get final values
+//     const exchangeRate = await page.$eval("#rate-note", (el) =>
+//       parseFloat(el.textContent.trim())
+//     );
+//     const currency = await page.$eval(
+//       ".send-currency-flag-selected [data-ccyname]",
+//       (el) => el.dataset.ccyname
 //     );
 
 //     return {
 //       currency,
-//       country,
+//       country: countryName,
 //       rate: exchangeRate,
 //       timestamp: new Date().toISOString(),
 //     };
@@ -158,52 +128,64 @@ puppeteer.use(stealthPlugin());
 //   }
 // }
 
-async function getExchangeRate(countryCode, countryName, transactionType) {
-  const browser = await puppeteer.launch({ headless: false });
+// async function getExchangeRate(currencyName, countryName, transactionType) {
+async function getExchangeRate(currencyName) {
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
-    // 1. Configure browser and navigate
+    // === STEP 1: BROWSER CONFIGURATION ===
+    // Set viewport to desktop size to ensure proper page layout
     await page.setViewport({ width: 1280, height: 800 });
+
+    // Navigate to target page with extended timeout
+    // 'networkidle2' waits until there are no more than 2 network connections for 500ms
     await page.goto("https://alansariexchange.com/service/foreign-exchange/", {
       waitUntil: "networkidle2",
       timeout: 60000,
     });
 
-    // 2. Select transaction type
-    const typeValue = transactionType === "Buy" ? "B" : "S";
-    await page.click(`input.transfer_type[value="${typeValue}"]`);
+    // === STEP 2: TRANSACTION TYPE SELECTION ===
+    // Convert Buy/Sell to radio button values (B/S)
+    // const typeValue = transactionType === "Buy" ? "B" : "S";
+    await page.click(`input.transfer_type[value="B"]`);
 
-    // 3. Store initial rate for comparison
+    // === STEP 3: INITIAL RATE CAPTURE ===
+    // Store initial rate to verify it changes after currency selection
     const initialRate = await page.$eval("#rate-note", (el) =>
       el.textContent.trim()
     );
 
-    // 4. Open currency dropdown
+    // === STEP 4: CURRENCY SELECTION PREPARATION ===
+    // Open currency dropdown to make options visible
     await page.click(".send-currency-flag-selected");
 
-    // 5. Select currency using country code
-    const countrySelector = `li a span[data-ccyname="${countryCode}"]`;
+    // === STEP 5: CURRENCY SELECTION ===
+    // Wait for target currency to appear in dropdown (15s timeout)
+    const countrySelector = `li a span[data-ccyname="${currencyName}"]`;
     await page.waitForSelector(countrySelector, {
       visible: true,
       timeout: 15000,
     });
 
-    // Click and get the expected currency code
-    const { currencyCode: expectedCurrency, rate } = await page.evaluate(
+    // Execute in browser context to:
+    // 1. Find currency element
+    // 2. Click parent anchor tag
+    // 3. Capture currency code from data attribute
+    const { currencyCode: expectedCurrency } = await page.evaluate(
       (selector) => {
         const span = document.querySelector(selector);
         const currency = span.dataset.ccyname;
-        span.closest("a").click();
-        return {
-          currencyCode: currency,
-          rate: document.querySelector("#rate-note").textContent.trim(),
-        };
+        span.closest("a").click(); // Click parent anchor to select currency
+        return { currencyCode: currency };
       },
       countrySelector
     );
 
-    // 6. Wait for rate update using multiple conditions
+    // === STEP 6: RATE UPDATE VERIFICATION ===
+    // Wait until both conditions are met:
+    // 1. Rate has changed from initial value
+    // 2. Currency code in rate display matches selected currency
     await page.waitForFunction(
       ({ initial, expected }) => {
         const currentRate = document
@@ -214,35 +196,39 @@ async function getExchangeRate(countryCode, countryName, transactionType) {
           .textContent.trim();
         return currentRate !== initial && currentCurrency === expected;
       },
-      { timeout: 10000 },
+      { timeout: 10000 }, // 10s timeout for rate update
       { initial: initialRate, expected: expectedCurrency }
     );
 
-    // 7. Get final values
+    // === STEP 7: FINAL DATA EXTRACTION ===
+    // Get updated exchange rate (already verified by waitForFunction)
     const exchangeRate = await page.$eval("#rate-note", (el) =>
-      parseFloat(el.textContent.trim())
-    );
-    const currency = await page.$eval(
-      ".send-currency-flag-selected [data-ccyname]",
-      (el) => el.dataset.ccyname
+      Number(parseFloat(el.textContent.trim()).toFixed(2))
     );
 
+    // === REDUNDANCY REMOVED ===
+    // Original code had duplicate currency lookup here - using expectedCurrency instead
+    // since we already validated currency matches in waitForFunction
+
     return {
-      currency,
-      country: countryName,
+      currency: expectedCurrency, // Use already validated currency code
+      // country: countryName,
       rate: exchangeRate,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toLocaleString(),
     };
   } catch (error) {
+    // === ERROR HANDLING ===
     console.error("Error during scraping:");
-    await page.screenshot({ path: "error-screenshot.png" });
+    await page.screenshot({ path: `error-${Date.now()}.png` });
     throw error;
   } finally {
+    // === CLEANUP ===
     await browser.close();
   }
 }
 
-// Usage example
-getExchangeRate("CAD", "BANGLADESH", "Buy")
+//final call
+// getExchangeRate("CAD", "BANGLADESH", "Buy")
+getExchangeRate("CAD")
   .then((result) => console.log(result))
   .catch(console.error);
