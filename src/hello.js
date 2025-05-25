@@ -8,6 +8,11 @@ const ai = new GoogleGenAI({
 });
 
 puppeteer.use(stealthPlugin());
+const browser = await puppeteer.launch({ headless: true });
+const page = await browser.newPage();
+// === STEP 1: BROWSER CONFIGURATION ===
+// Set viewport to desktop size to ensure proper page layout
+await page.setViewport({ width: 1280, height: 800 });
 
 // async function main() {
 //   const browser = await puppeteer.launch({ headless: true });
@@ -128,16 +133,12 @@ puppeteer.use(stealthPlugin());
 //   }
 // }
 
+//final call
+// getExchangeRate("CAD", "BANGLADESH", "Buy")
+
 // async function getExchangeRate(currencyName, countryName, transactionType) {
-async function getExchangeRate(currencyName) {
-  const browser = await puppeteer.launch({ headless: true });
-  const page = await browser.newPage();
-
+async function getAnsariExchangeRate(currencyName) {
   try {
-    // === STEP 1: BROWSER CONFIGURATION ===
-    // Set viewport to desktop size to ensure proper page layout
-    await page.setViewport({ width: 1280, height: 800 });
-
     // Navigate to target page with extended timeout
     // 'networkidle2' waits until there are no more than 2 network connections for 500ms
     await page.goto("https://alansariexchange.com/service/foreign-exchange/", {
@@ -227,8 +228,6 @@ async function getExchangeRate(currencyName) {
   }
 }
 
-//final call
-// getExchangeRate("CAD", "BANGLADESH", "Buy")
-getExchangeRate("CAD")
+getAnsariExchangeRate("CAD")
   .then((result) => console.log(result))
   .catch(console.error);
