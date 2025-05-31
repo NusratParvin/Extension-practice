@@ -4,7 +4,7 @@ import stealthPlugin from "puppeteer-extra-plugin-stealth";
 puppeteer.use(stealthPlugin());
 
 async function getAnsariExchangeRate(currencyCode, transactionType = "Buy") {
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
   try {

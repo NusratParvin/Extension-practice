@@ -33,6 +33,6 @@ async function getFardanRate(currencyCode) {
   return rate;
 }
 
-getFardanRate("BDT")
+getFardanRate("CAD")
   .then((rate) => console.log("rate:", rate))
   .catch(console.error);
