@@ -6,7 +6,7 @@ puppeteer.use(stealthPlugin());
 
 async function getAnsariExchangeRate(currencyCode, transactionType = "Buy") {
   // 1) Launch a new browser + page each time:
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
@@ -37,7 +37,7 @@ async function getAnsariExchangeRate(currencyCode, transactionType = "Buy") {
 
     // 8) Wait for that dropdown to render its list of currencies:
     const itemSelector = `li a span[data-ccyname="${currencyCode}"]`;
-    await page.waitForSelector(itemSelector, { visible: true, timeout: 15000 });
+    await page.waitForSelector(itemSelector, { visible: true });
 
     // 9) Click on the span whose data-ccyname matches our target:
     const { currencyCode: expected } = await page.evaluate((sel) => {
