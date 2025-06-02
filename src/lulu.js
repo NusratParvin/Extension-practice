@@ -141,7 +141,6 @@ import stealthPlugin from "puppeteer-extra-plugin-stealth";
 
 puppeteer.use(stealthPlugin());
 
-// Helper function to wait
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function getLuluRates(currencyCode) {
@@ -157,6 +156,7 @@ async function getLuluRates(currencyCode) {
 
   const page = await browser.newPage();
   const uaeLocation = { latitude: 25.276987, longitude: 55.296249 };
+  // const uaeLocation = { latitude: null, longitude: null };
   await page.setGeolocation(uaeLocation);
   const context = browser.defaultBrowserContext();
   await context.overridePermissions("https://luluexchange.com", [
@@ -165,27 +165,23 @@ async function getLuluRates(currencyCode) {
   await page.setViewport({ width: 1280, height: 800 });
 
   try {
-    console.log("Navigating to Lulu Exchange...");
     await page.goto("https://luluexchange.com/services/currency-exchange/", {
       waitUntil: "networkidle2",
       timeout: 60000,
     });
 
-    console.log("Page loaded. Waiting for converter...");
     await page.waitForSelector(".ll-convertBnr", {
       visible: true,
       timeout: 20000,
     });
 
     // Set AED amount to 1
-    console.log("Setting AED amount to 1");
     const aedInput = await page.waitForSelector("#convrtInput");
     await aedInput.click({ clickCount: 3 });
     await aedInput.type("1", { delay: 100 });
     await wait(1500);
 
     // Select target currency
-    console.log(`Selecting currency: ${currencyCode}`);
     await page.click(".right-sect .countrDrop-1");
     await wait(1000);
 
@@ -203,15 +199,12 @@ async function getLuluRates(currencyCode) {
       const output = document.querySelector("#convrtOutput");
       return output ? parseFloat(output.value) : 0;
     });
-    console.log("Buy rate:", buyRate);
 
     // Swap currencies
-    console.log("Clicking swap button");
     await page.click(".btn-convertBnr");
     await wait(2500);
 
     // RESET LOGIC - Set foreign currency to 1
-    console.log("Resetting and setting foreign currency to 1");
     const foreignInput = await page.$("#convrtOutput");
     await foreignInput.click({ clickCount: 3 });
     await foreignInput.press("Backspace");
@@ -223,7 +216,6 @@ async function getLuluRates(currencyCode) {
       const output = document.querySelector("#convrtInput");
       return output ? parseFloat(output.value) : 0;
     });
-    console.log("Sell rate:", sellRate);
 
     return {
       currency: currencyCode,
