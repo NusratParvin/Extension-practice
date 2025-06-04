@@ -1,11 +1,3 @@
-// import puppeteer from "puppeteer-extra";
-// import stealthPlugin from "puppeteer-extra-plugin-stealth";
-
-// puppeteer.use(stealthPlugin());
-
-// const browser = await puppeteer.launch();
-// const page = await browser.newPage();
-
 // async function getFardanRate(currencyCode) {
 //   await page.goto("https://alfardanexchange.com/foreign-exchange", {
 //     waitUntil: "networkidle2",
@@ -37,7 +29,12 @@
 //   .then((rate) => console.log("rate:", rate))
 //   .catch(console.error);
 
-export async function getFardanRate(currencyCode, transactionType = "buy") {
+import puppeteer from "puppeteer-extra";
+import stealthPlugin from "puppeteer-extra-plugin-stealth";
+
+puppeteer.use(stealthPlugin());
+
+export async function getFardanRate(currencyCode, transactionType = "sell") {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 

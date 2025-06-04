@@ -1,92 +1,113 @@
+// src/try.js
 import puppeteer from "puppeteer-extra";
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
+import { getFardanRate } from "./fardan.js";
+import { getLuluRates } from "./lulu.js";
 
 puppeteer.use(stealthPlugin());
 
 async function getAnsariExchangeRate(currencyCode, transactionType = "Buy") {
+  // 1) Launch a new browser + page each time:
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
-    // Set viewport and navigate to page
+    // 2) Set a “normal” desktop viewport:
     await page.setViewport({ width: 1280, height: 800 });
+
+    // 3) Go to Ansari’s FX page:
     await page.goto("https://alansariexchange.com/service/foreign-exchange/", {
       waitUntil: "networkidle2",
-      timeout: 60000,
     });
 
-    // === TRANSACTION TYPE SELECTION ===
-    // Convert Buy/Sell to radio button values (B/S)
+    // 4) Click the “Buy” or “Sell” radio button:
+    //    (Ansari uses <input.transfer_type value="B"> for Buy  and value="S" for Sell)
     const typeValue = transactionType === "Buy" ? "B" : "S";
-
-    // Click the transaction type radio button
     await page.click(`input.transfer_type[value="${typeValue}"]`);
+    await new Promise((r) => setTimeout(r, 1500));
 
-    // Wait briefly for UI to update
-    await page.waitForTimeout(500);
+    // 5) Wait a short moment so that the rate-note field can update its placeholder/labels:
+    //    If Puppeteer’s `page.waitForTimeout` isn’t available, you can use a bare setTimeout instead.
 
-    // === INITIAL RATE CAPTURE ===
-    const initialRate = await page.$eval("#rate-note", (el) =>
+    // 6) Grab whatever rate is currently displayed for the default currency (typically “AED”):
+    const initialRateText = await page.$eval("#rate-note", (el) =>
       el.textContent.trim()
     );
 
-    // === OPEN CURRENCY SELECTOR ===
+    // 7) Open the currency dropdown (the “From”–currency selector):
     await page.click(".send-currency-flag-selected");
 
-    // === SELECT CURRENCY ===
-    const currencySelector = `li a span[data-ccyname="${currencyCode}"]`;
-    await page.waitForSelector(currencySelector, {
-      visible: true,
-      timeout: 15000,
-    });
+    // 8) Wait for that dropdown to render its list of currencies:
+    const itemSelector = `li a span[data-ccyname="${currencyCode}"]`;
+    await page.waitForSelector(itemSelector, { visible: true });
 
-    // Click currency and get expected code
-    const { currencyCode: expectedCurrency } = await page.evaluate(
-      (selector) => {
-        const span = document.querySelector(selector);
-        const currency = span.dataset.ccyname;
-        span.closest("a").click();
-        return { currencyCode: currency };
-      },
-      currencySelector
-    );
+    // 9) Click on the span whose data-ccyname matches our target:
+    const { currencyCode: expected } = await page.evaluate((sel) => {
+      const span = document.querySelector(sel);
+      if (!span) throw new Error(`Could not find dropdown item for ${sel}`);
+      const code = span.dataset.ccyname;
+      // Click its parent <a> to select this currency
+      span.closest("a").click();
+      return { currencyCode: code };
+    }, itemSelector);
 
-    // === WAIT FOR RATE UPDATE ===
+    // 10) Now wait until “#rate-note” updates to show the new currency’s rate:
     await page.waitForFunction(
-      ({ initial, expected }) => {
-        const currentRate = document
-          .querySelector("#rate-note")
-          .textContent.trim();
-        const currentCurrency = document
+      (initial, expectedCurrency) => {
+        const curText = document.querySelector("#rate-note").textContent.trim();
+        const curCcy = document
           .querySelector("#rate-note-currency")
           .textContent.trim();
-        return currentRate !== initial && currentCurrency === expected;
+        return curText !== initial && curCcy === expectedCurrency;
       },
       { timeout: 10000 },
-      { initial: initialRate, expected: expectedCurrency }
+      initialRateText,
+      expected
     );
 
-    // === GET FINAL RATE ===
-    const exchangeRate = await page.$eval("#rate-note", (el) =>
+    // 11) Read out the final rate (rounded to 2 decimals):
+    const finalRate = await page.$eval("#rate-note", (el) =>
       Number(parseFloat(el.textContent.trim()).toFixed(2))
     );
 
     return {
       currency: currencyCode,
       transactionType,
-      rate: exchangeRate,
+      rate: finalRate,
       timestamp: new Date().toLocaleString(),
     };
-  } catch (error) {
-    console.error("Scraping error:", error);
-    await page.screenshot({ path: `error-${Date.now()}.png` });
-    throw error;
+  } catch (err) {
+    console.error("Scraping error:", err);
+    await page.screenshot({ path: `error-screenshot-${Date.now()}.png` });
+    throw err;
   } finally {
     await browser.close();
   }
 }
 
-// Usage examples:
-getAnsariExchangeRate("CAD", "Buy").then(console.log).catch(console.error);
+// ───────────────────────────────────────────────────────────────────────────────
+// Example calls (you can replace "CAD" or "BDT" with any supported code):
+// ───────────────────────────────────────────────────────────────────────────────
+(async () => {
+  try {
+    const buyCAD = await getAnsariExchangeRate("CAD", "Buy");
+    console.log("Buy ansari CAD →", buyCAD);
 
-getAnsariExchangeRate("EUR", "Sell").then(console.log).catch(console.error);
+    //   getFardanRate("CAD")
+    // .then((rate) => console.log("rate:", rate))
+    // .catch(console.error);
+    const buyFardan = await getFardanRate("CAD");
+    console.log("Buy fardan CAD →", buyFardan);
+
+    const buyLulu = await getLuluRates("BDT");
+    console.log("Buy Lulu CAD →", buyLulu);
+
+    // const sellCAD = await getAnsariExchangeRate("CAD", "Sell");
+    // console.log("Sell CAD →", sellCAD);
+
+    // const buyBDT = await getAnsariExchangeRate("BDT", "Buy");
+    // console.log("Buy BDT →", buyBDT);
+  } catch (e) {
+    console.error("Fatal error in examples:", e);
+  }
+})();

@@ -143,7 +143,7 @@ puppeteer.use(stealthPlugin());
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function getLuluRates(currencyCode) {
+export async function getLuluRates(currencyCode) {
   const browser = await puppeteer.launch({
     headless: true,
     args: [
@@ -233,7 +233,7 @@ async function getLuluRates(currencyCode) {
 }
 
 // Example usage
-(async () => {
-  const cadRates = await getLuluRates("BDT");
-  console.log("CAD Rates:", cadRates);
-})();
+// (async () => {
+//   const cadRates = await getLuluRates("BDT");
+//   console.log("CAD Rates:", cadRates);
+// })();

@@ -22,7 +22,7 @@ async function getAnsariExchangeRate(currencyCode, transactionType = "Buy") {
     //    (Ansari uses <input.transfer_type value="B"> for Buy  and value="S" for Sell)
     const typeValue = transactionType === "Buy" ? "B" : "S";
     await page.click(`input.transfer_type[value="${typeValue}"]`);
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 1500));
 
     // 5) Wait a short moment so that the rate-note field can update its placeholder/labels:
     //    If Puppeteer’s `page.waitForTimeout` isn’t available, you can use a bare setTimeout instead.
