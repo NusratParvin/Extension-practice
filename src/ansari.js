@@ -1,12 +1,10 @@
 // src/try.js
 import puppeteer from "puppeteer-extra";
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
-import { getFardanRate } from "./fardan.js";
-import { getLuluRates } from "./lulu.js";
 
 puppeteer.use(stealthPlugin());
 
-async function getAnsariExchangeRate(currencyCode, transactionType = "Buy") {
+export async function getAnsariExchangeRate(currencyCode, transactionType) {
   // 1) Launch a new browser + page each time:
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
@@ -21,7 +19,7 @@ async function getAnsariExchangeRate(currencyCode, transactionType = "Buy") {
     });
 
     // 4) Click the “Buy” or “Sell” radio button:
-    //    (Ansari uses <input.transfer_type value="B"> for Buy  and value="S" for Sell)
+
     const typeValue = transactionType === "Buy" ? "B" : "S";
     await page.click(`input.transfer_type[value="${typeValue}"]`);
     await new Promise((r) => setTimeout(r, 1500));
@@ -84,30 +82,3 @@ async function getAnsariExchangeRate(currencyCode, transactionType = "Buy") {
     await browser.close();
   }
 }
-
-// ───────────────────────────────────────────────────────────────────────────────
-// Example calls (you can replace "CAD" or "BDT" with any supported code):
-// ───────────────────────────────────────────────────────────────────────────────
-(async () => {
-  try {
-    const buyCAD = await getAnsariExchangeRate("CAD", "Buy");
-    console.log("Buy ansari CAD →", buyCAD);
-
-    //   getFardanRate("CAD")
-    // .then((rate) => console.log("rate:", rate))
-    // .catch(console.error);
-    const buyFardan = await getFardanRate("CAD");
-    console.log("Buy fardan CAD →", buyFardan);
-
-    const buyLulu = await getLuluRates("BDT");
-    console.log("Buy Lulu CAD →", buyLulu);
-
-    // const sellCAD = await getAnsariExchangeRate("CAD", "Sell");
-    // console.log("Sell CAD →", sellCAD);
-
-    // const buyBDT = await getAnsariExchangeRate("BDT", "Buy");
-    // console.log("Buy BDT →", buyBDT);
-  } catch (e) {
-    console.error("Fatal error in examples:", e);
-  }
-})();

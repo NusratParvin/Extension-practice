@@ -164,3 +164,15 @@ console.log(
   fardanCurrencies.length,
   ansariCurrencies.length
 );
+const mergedCurrencies = [
+  ...luluCurrencies,
+  ...fardanCurrencies,
+  ...ansariCurrencies,
+];
+
+const deDuplicatedArray = new Map(
+  mergedCurrencies.map((item) => [item.code, item])
+).values();
+
+const uniqueArray = Array.from(deDuplicatedArray);
+console.log(uniqueArray);
