@@ -1,6 +1,7 @@
 {
   "type": "module",
   "devDependencies": {
+    "daisyui": "^5.0.43",
     "tailwindcss": "^3.4.17"
   },
   "dependencies": {

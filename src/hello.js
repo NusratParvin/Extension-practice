@@ -107,13 +107,13 @@ import { getLuluRates } from "./lulu.js";
 
 const main = async () => {
   try {
-    const buyCAD = await getAnsariExchangeRate("BDT", "Sell");
+    const buyCAD = await getAnsariExchangeRate("BDT", "Buy");
     console.log("Buy ansari CAD →", buyCAD);
 
-    const buyFardan = await getFardanRate("BDT", "Sell");
+    const buyFardan = await getFardanRate("BDT", "Buy");
     console.log("Buy fardan CAD →", buyFardan);
 
-    const buyLulu = await getLuluRates("BDT", "Sell");
+    const buyLulu = await getLuluRates("BDT", "Buy");
     console.log("Buy Lulu CAD →", buyLulu);
   } catch (e) {
     console.error("Fatal error in examples:", e);

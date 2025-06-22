@@ -159,11 +159,6 @@ const ansariCurrencies = [
   { code: "THB", country: "THAILAND BAHT" },
 ];
 
-console.log(
-  luluCurrencies.length,
-  fardanCurrencies.length,
-  ansariCurrencies.length
-);
 const mergedCurrencies = [
   ...luluCurrencies,
   ...fardanCurrencies,
@@ -174,5 +169,7 @@ const deDuplicatedArray = new Map(
   mergedCurrencies.map((item) => [item.code, item])
 ).values();
 
-const uniqueArray = Array.from(deDuplicatedArray);
-console.log(uniqueArray);
+const uniqueCurrencies = Array.from(deDuplicatedArray);
+uniqueCurrencies.sort((a, b) => a.country.localeCompare(b.country));
+
+console.log(uniqueCurrencies);

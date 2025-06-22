@@ -1,0 +1,152 @@
+<body class="p-4 bg-gray-100 w-[500px]">
+  <div class="container mx-auto p-4 max-w-md">
+    <h2 class="text-xl font-bold text-center mb-4">Currency Converter</h2>
+
+    <!-- Currency Selection -->
+    <!-- <div class="grid grid-cols-2 gap-4 mb-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium">From</label>
+          <select class="w-full py-2 px-3 border rounded-md bg-white">
+             Currency options  
+          </select>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium">To</label>
+          <select class="w-full py-2 px-3 border rounded-md bg-white">
+           </select>
+        </div>
+      </div> -->
+
+    <!-- Rate Type Selection -->
+    <div class="space-y-2 mb-4">
+      <label class="block text-sm font-medium">Rate Type</label>
+      <div class="flex space-x-4">
+        <label class="flex items-center space-x-2">
+          <input type="radio" name="rateType" value="buy" checked />
+          <span>Buy Rates</span>
+        </label>
+        <label class="flex items-center space-x-2">
+          <input type="radio" name="rateType" value="sell" />
+          <span>Sell Rates</span>
+        </label>
+        <label class="flex items-center space-x-2">
+          <input type="radio" name="rateType" value="transfer" />
+          <span>Transfer Rates</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Amount Input -->
+    <div class="space-y-2 mb-4">
+      <label class="block text-sm font-medium">Amount</label>
+      <div class="flex">
+        <!-- <div class="bg-gray-100 px-3 py-2 rounded-l-md border border-r-0"> -->
+        <div
+          class="bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 appearance-none w-32"
+        >
+          AED
+        </div>
+        <input
+          type="number"
+          class="w-full rounded-r-md border py-2 px-3"
+          placeholder="Enter amount"
+        />
+      </div>
+    </div>
+
+    <div class="space-y-2 mb-4">
+      <div class="flex">
+        <!-- Currency Selector -->
+        <select
+          class="bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 appearance-none w-32"
+        >
+          <option value="" disabled>Select currency</option>
+          <!-- Options will be populated by JavaScript -->
+        </select>
+
+        <!-- Amount Input -->
+        <input
+          type="number"
+          class="w-full rounded-r-md border py-2 px-3"
+          placeholder="Enter amount"
+        />
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="space-y-2 mt-4">
+      <h3 class="text-lg font-semibold">Exchange Houses Comparison</h3>
+
+      <!-- Exchange House Item (Optimal) -->
+      <div
+        class="p-3 border rounded-lg flex items-center justify-between bg-green-50 border-green-200"
+      >
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center"
+          >
+            <!-- Logo -->
+          </div>
+          <div>
+            <h4 class="font-medium">Exchange House Name</h4>
+            <p class="text-sm text-gray-500">1 AED = 22.61 INR (Buy)</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-end">
+          <div class="flex items-center">
+            <span
+              class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded flex items-center mr-2"
+            >
+              <span class="mr-1">✓</span> Optimal
+            </span>
+            <span class="font-semibold">INR 22,610</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exchange House Item (Regular) -->
+      <div
+        class="p-3 border rounded-lg flex items-center justify-between bg-white"
+      >
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center"
+          >
+            <!-- Logo -->
+          </div>
+          <div>
+            <h4 class="font-medium">Exchange House Name</h4>
+            <p class="text-sm text-gray-500">1 AED = 22.57 INR (Buy)</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-end">
+          <span class="font-semibold">INR 22,570</span>
+          <span class="text-xs text-red-500">-INR 40</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="mt-4 p-3 bg-gray-50 rounded-md border">
+      <p class="text-sm">
+        <span class="font-semibold">Optimal conversion:</span> Exchange House
+        offers the best buy rate
+      </p>
+      <p class="text-sm mt-1">
+        <span class="font-semibold">AED 1,000</span> =
+        <span class="font-bold">INR 22,610</span>
+      </p>
+    </div>
+
+    <!-- Last Updated Info -->
+    <div class="flex justify-between items-center text-sm text-gray-500 mt-3">
+      <span>Last updated: 12:45 PM</span>
+      <button class="flex items-center text-blue-500 hover:text-blue-700">
+        <span class="mr-1">↻</span> Refresh
+      </button>
+    </div>
+  </div>
+</body>
